@@ -1,0 +1,10 @@
+SECTIONS
+{
+    . = 0x20000000;
+    .text : { *(.text) }
+    .rodata : { *(.rodata) }
+    .data : { *(.data) }
+    .bss : { *(.bss) }
+    .sbss : { *(.sbss) }
+    .sdata : { *(.sdata) }
+}
