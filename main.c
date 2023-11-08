@@ -5,7 +5,7 @@ struct uartlite_regs {
     volatile unsigned int control;
 };
 
-struct uartlite_regs *const ttyUL0 = (struct uartlite_regs *)0x60000000;
+struct uartlite_regs *const ttyUL0 = (struct uartlite_regs *)0x60100000;
 
 #define SR_TX_FIFO_FULL         (1<<3) /* transmit FIFO full */
 #define SR_TX_FIFO_EMPTY        (1<<2) /* transmit FIFO empty */
