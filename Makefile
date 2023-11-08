@@ -1,4 +1,4 @@
-TOOL	:=	riscv32-unknown-elf-
+TOOL	:=	riscv64-linux-gnu-
 CC		:=	$(TOOL)gcc
 OBJCOPY	:=	$(TOOL)objcopy
 OBJDUMP :=  $(TOOL)objdump
