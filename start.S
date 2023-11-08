@@ -39,6 +39,7 @@ poweroff:
 _stack:
 .section .data
     .global bootstack
+    .align 16
 bootstack:
     .space 1024
     .global bootstacktop
