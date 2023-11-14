@@ -16,8 +16,8 @@ start_data.hex: start.bin
 start.bin: start.elf
 	$(OBJCOPY) -O binary $< $@
 
-start.elf: start.S main.c linker.ld
-	$(CC) -nostdlib -static -fno-builtin-printf -T linker.ld start.S main.c -lgcc -O3 -o $@
+start.elf: start.S main.c uart.c trap.c mmu.c linker.ld
+	$(CC) -nostdlib -static -fno-builtin-printf -T linker.ld start.S main.c uart.c trap.c mmu.c -lgcc -O2 -o $@
 
 dump.S: start.elf
 	$(OBJDUMP) -D $< > $@
