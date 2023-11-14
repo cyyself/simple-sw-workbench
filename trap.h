@@ -2,3 +2,4 @@
 
 void setup_mtvec();
 void trap_handler();
+void enter_smode();

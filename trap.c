@@ -39,3 +39,18 @@ void setup_mtvec() {
         : "r" (ptr)
     );
 }
+
+void enter_smode() {
+    asm volatile("csrc mstatus, %0" : : "r" (0x1800)); // clear mpp to zero
+    asm volatile("csrs mstatus, %0" : : "r" (0x0800)); // set mpp to s-mode
+    asm volatile(
+        ".option arch, -c\n"
+        "auipc a0, 0\n"
+        "addi a0, a0, 16\n"
+        "csrw mepc, a0\n"
+        "mret\n"
+        :
+        :
+        : "a0"
+    );
+}
