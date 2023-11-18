@@ -71,7 +71,7 @@ void mmu_init() {
     mmu_pmp_allow_all();
     // clear satp
     asm volatile("csrw satp, %0" : : "r" (0));
-    // set mpp to s-mode and mprov=1
+    // set mpp to s-mode and mprv=1
     asm volatile("csrc mstatus, %0" : : "r" (0x1800)); // clear mpp to zero
     asm volatile("csrs mstatus, %0" : : "r" (0x20800));
     // set satp
