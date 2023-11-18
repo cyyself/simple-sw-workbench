@@ -2,8 +2,8 @@ CROSS_COMPILE :=	riscv64-linux-gnu-
 CC		:=	$(CROSS_COMPILE)gcc
 OBJCOPY	:=	$(CROSS_COMPILE)objcopy
 OBJDUMP :=  $(CROSS_COMPILE)objdump
-
-CFLAGS := -nostdlib -static -mcmodel=medany -fno-builtin-printf -O2
+EXTRA_CFLAGS := 
+CFLAGS := -nostdlib -static -mcmodel=medany -fno-builtin-printf -O0 $(EXTRA_CFLAGS)
 .PHONY: clean
 
 all: start.bin dump.S
@@ -11,8 +11,8 @@ all: start.bin dump.S
 start.bin: start.elf
 	$(OBJCOPY) -O binary $< $@
 
-start.elf: start.S main.c uart.c trap.c mmu.c linker.ld
-	$(CC) $(CFLAGS) -T linker.ld start.S main.c uart.c trap.c mmu.c -lgcc -o $@
+start.elf: linker.ld start.S main.c uart.c trap.c mmu.c
+	$(CC) $(CFLAGS) -T $^ -lgcc -o $@
 
 dump.S: start.elf
 	$(OBJDUMP) -D $< > $@
