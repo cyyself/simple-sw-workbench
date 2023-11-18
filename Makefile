@@ -1,26 +1,21 @@
-TOOL	:=	riscv64-linux-gnu-
-CC		:=	$(TOOL)gcc
-OBJCOPY	:=	$(TOOL)objcopy
-OBJDUMP :=  $(TOOL)objdump
+CROSS_COMPILE :=	riscv64-linux-gnu-
+CC		:=	$(CROSS_COMPILE)gcc
+OBJCOPY	:=	$(CROSS_COMPILE)objcopy
+OBJDUMP :=  $(CROSS_COMPILE)objdump
 
+CFLAGS := -nostdlib -static -mcmodel=medany -fno-builtin-printf -O2
 .PHONY: clean
 
-all: start_inst.hex start_data.hex dump.S
-
-start_inst.hex: start.bin
-	od -t x4 -An -w4 -v $< > $@
-
-start_data.hex: start.bin
-	od -t x8 -An -w8 -v $< > $@
+all: start.bin dump.S
 
 start.bin: start.elf
 	$(OBJCOPY) -O binary $< $@
 
 start.elf: start.S main.c uart.c trap.c mmu.c linker.ld
-	$(CC) -nostdlib -static -fno-builtin-printf -T linker.ld start.S main.c uart.c trap.c mmu.c -lgcc -O2 -o $@
+	$(CC) $(CFLAGS) -T linker.ld start.S main.c uart.c trap.c mmu.c -lgcc -o $@
 
 dump.S: start.elf
 	$(OBJDUMP) -D $< > $@
 
 clean:
-	rm start_inst.hex start_data.hex start.bin start.elf
+	rm start.bin start.elf
