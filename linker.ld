@@ -1,11 +1,19 @@
 SECTIONS
 {
     . = 0x80000000;
-    .text : { *(.text) }
-    .rodata : { *(.rodata) }
-    .data : { *(.data) }
-    .bss : { *(.bss) }
-    .sbss : { *(.sbss) }
-    .sdata : { *(.sdata) }
-    .note.gnu.build-id : { *(.note.gnu.build-id) }
+    .ro : {
+        *(.text)
+        *(.rodata)
+    }
+    .rw : {
+        *(.data)
+        *(.bss)
+        *(COMMON)
+    }
+    . = ALIGN(8);
+    . = . + 0x10000; /* 64kB of stack memory */
+    stack_top = .; /* for startup.s */
+    heap_low = .; /* for _sbrk */
+    . = . + 0x10000; /* 64kB of heap memory */
+    heap_top = .; /* for _sbrk */
 }

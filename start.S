@@ -32,16 +32,8 @@ _start:
     li  x29, 0
     li  x30, 0
     li  x31, 0
-    la  sp, bootstacktop
+    la  sp, stack_top
     jal main
-poweroff:
-    j poweroff
-_stack:
-.section .data
-    .global bootstack
-    .align 16
-bootstack:
-    .space 1024
-    .global bootstacktop
-bootstacktop:
-    .space 64
+.globl _exit
+_exit:
+    j _exit
