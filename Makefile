@@ -10,13 +10,13 @@ CFLAGS := -nostdlib -static -mcmodel=medany -O2 $(EXTRA_CFLAGS)
 all: start.bin dump.S
 
 deps/newlib/$(CROSS)/newlib/libc.a: deps/newlib
-	cd deps/newlib && ./configure --target $(CROSS) --disable-newlib-supplied-syscalls CFLAGS_FOR_TARGET="-g -O2 -mcmodel=medany" && make -j `nproc`
+	cd deps/newlib && ./configure --target $(CROSS) --disable-newlib-supplied-syscalls CFLAGS_FOR_TARGET="-g -O2 -mcmodel=medany  -DNO_FLOATING_POINT" && make -j `nproc`
 
 start.bin: start.elf
 	$(OBJCOPY) -O binary $< $@
 
 start.elf: linker.ld start.S main.c uart.c trap.c mmu.c sys.c deps/newlib/$(CROSS)/newlib/libc.a
-	$(CC) $(CFLAGS) -T $^ -I deps/newlib/include -lgcc -o $@
+	$(CC) $(CFLAGS) -T $^ -I deps/newlib/include -o $@
 
 dump.S: start.elf
 	$(OBJDUMP) -D $< > $@
