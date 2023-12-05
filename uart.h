@@ -1,13 +1,7 @@
 #ifndef UART_H
 #define UART_H
 
-struct uartlite_regs {
-    volatile unsigned int rx_fifo;
-    volatile unsigned int tx_fifo;
-    volatile unsigned int status;
-    volatile unsigned int control;
-};
-
+void uart_init();
 void uart_put_c(char c);
 char uart_check_read();
 char uart_get_c();

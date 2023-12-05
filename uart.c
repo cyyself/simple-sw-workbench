@@ -1,26 +1,34 @@
 #include "uart.h"
 
-#define SR_TX_FIFO_FULL         (1<<3) /* transmit FIFO full */
-#define SR_TX_FIFO_EMPTY        (1<<2) /* transmit FIFO empty */
-#define SR_RX_FIFO_VALID_DATA   (1<<0) /* data in receive FIFO */
-#define SR_RX_FIFO_FULL         (1<<1) /* receive FIFO full */
+volatile unsigned int *const ttyS0 = (unsigned int *const)0x91400000;
 
-#define ULITE_CONTROL_RST_TX	0x01
-#define ULITE_CONTROL_RST_RX	0x02
+#define UART8250_RX  0
+#define UART8250_TX  0
+#define UART8250_LCR 3
+#define UART8250_LSR 5
 
-struct uartlite_regs *const ttyUL0 = (struct uartlite_regs *)0x60100000;
+#define UART8250_LCR_DLAB 0x80
+
+#define UART8250_LSR_DATA 0x01
+#define UART8250_LSR_TXRDY 0x20
+
+void uart_init() {
+    // set DLAB = 0
+    ttyS0[UART8250_LCR] &= ~UART8250_LCR_DLAB;
+}
 
 void uart_put_c(char c) {
-    while (ttyUL0->status & SR_TX_FIFO_FULL);
-    ttyUL0->tx_fifo = c;
+    while ((ttyS0[UART8250_LSR] & UART8250_LSR_TXRDY) == 0);
+    ttyS0[UART8250_TX] = c;
 }
 
 char uart_check_read() { // 1: data ready, 0: no data
-    return (ttyUL0->status & SR_RX_FIFO_VALID_DATA) != 0;
+    return (ttyS0[UART8250_LSR] & UART8250_LSR_DATA) != 0;
 }
 
 char uart_get_c() {
-    return ttyUL0->rx_fifo;
+    while ((ttyS0[UART8250_LSR] & UART8250_LSR_DATA) == 0);
+    return ttyS0[UART8250_RX];
 }
 
 void print_s(const char *c) {
