@@ -29,7 +29,7 @@ void mmu_map_new(unsigned long base_addr, unsigned long vaddr, unsigned long pad
     for (int i=2;i>=idx;i--) {
         unsigned long *pte = ((unsigned long *)base_addr)+((vaddr>>(12+9*i))&0x1ff);
         if (i == idx) {
-            if (*pte & SV39_PTE_BIT_V) print_s("Error! Page already exist\n");
+            if (*pte & SV39_PTE_BIT_V) print_s("Error! Page already exist\r\n");
             else {
                 *pte =  SV39_PTE_BIT_V | SV39_PTE_BIT_R | SV39_PTE_BIT_W | 
                         SV39_PTE_BIT_X | SV39_PTE_BIT_A | SV39_PTE_BIT_D |
@@ -51,22 +51,38 @@ void mmu_map_new(unsigned long base_addr, unsigned long vaddr, unsigned long pad
 
 void mmu_pmp_allow_all() {
 #ifdef ARCH_HAS_PMP
-    asm volatile("csrw pmpaddr0, %0" : : "r" (0xfffffffffffffffful)); // napot all
-    asm volatile("csrw pmpcfg0, %0" : : "r" ((3<<3) | 7)); // 7->rwx (3<<3)->a:napot
+    unsigned long tmp;
+    asm volatile("csrr %0, pmpaddr0" : "=r" (tmp));
+    dump_hex(tmp);
+    asm volatile("csrr %0, pmpaddr1" : "=r" (tmp));
+    dump_hex(tmp);
+    asm volatile("csrr %0, pmpcfg0" : "=r" (tmp));
+    dump_hex(tmp);
+    asm volatile("csrw pmpaddr2, %0" : : "r" (0x1fffffffff)); // napot 1TB. T-Head does not support all 1 address in napot
+    asm volatile("csrs pmpcfg0, %0" : : "r" (((3<<3) | 7) << (2*8))); // 7->rwx (3<<3)->a:napot    
+    asm volatile("csrr %0, pmpaddr2" : "=r" (tmp));
+    dump_hex(tmp);
+    asm volatile("csrr %0, pmpcfg0" : "=r" (tmp));
+    dump_hex(tmp);
 #endif
+}
+
+void dcache_call() {
+    asm volatile(
+        ".insn r 0b1011, 0b000, 0b0000000, x0, x0, x1"
+    );
 }
 
 void mmu_init() {
     unsigned long tmp;
-    simplemm.mem_range = 0x88000000; // 128MB
-    simplemm.page_table_alloc_ptr = 0x88000000;
+    simplemm.mem_range = 0x1ffff000; // 512MB-4KB
+    simplemm.page_table_alloc_ptr = 0x1ffff000;
     simplemm.page_table_ptr = (unsigned long)mmu_new_page_table_page();    
     // map 0x80000000 + 1GB
-    print_s("mmu map new begin!\n");
+    print_s("mmu map new begin!\r\n");
     mmu_map_new(simplemm.page_table_ptr, 0x80000000, 0x80000000, 2);
-    mmu_map_new(simplemm.page_table_ptr, 0x40000000, 0x40000000, 2);
-    mmu_map_new(simplemm.page_table_ptr, 0x00000000, 0x80000000, 2);
-    print_s("mmu map done!\n");
+    mmu_map_new(simplemm.page_table_ptr, 0x0, 0x0, 2);
+    print_s("mmu map done!\r\n");
     // pmp allow all
     mmu_pmp_allow_all();
     // clear satp
@@ -74,10 +90,20 @@ void mmu_init() {
     // set mpp to s-mode and mprv=1
     asm volatile("csrc mstatus, %0" : : "r" (0x1800)); // clear mpp to zero
     asm volatile("csrs mstatus, %0" : : "r" (0x20800));
+    // dump ra
+    print_s("dump ra address=");
+    asm volatile("ld %0, 24(sp)" : "=r" (tmp));
+    dump_hex(tmp);
+    dcache_call(); // without this, the stack will be correpted after satp set.
     // set satp
     asm volatile("csrw satp, %0" : : "r" ( SATP_SET_PPN(simplemm.page_table_ptr) | SATP_SET_MODE(SATP_SV39) ));
     asm volatile("csrr %0, satp" : "=r" (tmp));
+    asm volatile("sfence.vma");
     asm volatile("fence rw,rw");
     asm volatile("fence.i");
-    print_s("mmu init ok!\n");
+    print_s("mmu init ok!\r\n");
+    // dump ra
+    print_s("dump ra address=");
+    asm volatile("ld %0, 24(sp)" : "=r" (tmp));
+    dump_hex(tmp);
 }

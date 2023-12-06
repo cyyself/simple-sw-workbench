@@ -16,7 +16,7 @@ void __attribute__((aligned(4))) trap_handler() {
         : "=r" (mepc)
     );
     print_s("Exception: ");
-    print_s("\nmcause: ");
+    print_s("\r\nmcause: ");
     dump_hex(mcause);
     print_s("mtval: ");
     dump_hex(mtval);

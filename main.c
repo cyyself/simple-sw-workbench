@@ -7,6 +7,10 @@ char s1[64];
 
 void *v_memcpy(void* dest, const void* src, long n);
 
+void enable_counter_smode() {
+    asm volatile("csrs mcounteren, %0" : : "r" (0xffffffffu));
+}
+
 unsigned long rdcycle() {
     unsigned long cycle;
     asm volatile ("rdcycle %0" : "=r" (cycle));
@@ -33,10 +37,39 @@ void check_freq() {
     print_s("Hz\r\n");
 }
 
+unsigned long get_hartid() {
+    unsigned long hartid;
+    asm volatile ("csrr %0, mhartid" : "=r" (hartid));
+    return hartid;
+}
+
+unsigned long get_mxstatus() {
+    unsigned long mxstatus;
+    asm volatile ("csrr %0, 0x7c0" : "=r" (mxstatus));
+    return mxstatus;
+}
+
+void theadfix() {
+    // disable MAEE in mxstatus
+    asm volatile ("csrc 0x7c0, %0" : : "r" ((1<<21)));
+}
+
 int main() {
+    unsigned long hartid = get_hartid();
+    print_s("hart ");
+    print_long(hartid);
+    print_s(" is booting\r\n");
+    theadfix();
+    unsigned long mxstatus = get_mxstatus();
+    print_s("mxstatus = ");
+    dump_hex(mxstatus);
     setup_mtvec();
-    // mmu_init();
-    // enter_smode();
+    mmu_init();
+    print_s("returned from mmu_init\r\n");
+    enable_counter_smode();
+    print_s("entering smode\r\n");
+    enter_smode();
+    print_s("now entered smode\r\n");
     double x = 1.0;
     dump_hex(*(unsigned long*)(&x));
     v_memcpy(s1, s0, 64);
