@@ -67,12 +67,6 @@ void mmu_pmp_allow_all() {
 #endif
 }
 
-void dcache_call() {
-    asm volatile(
-        ".insn r 0b1011, 0b000, 0b0000000, x0, x0, x1"
-    );
-}
-
 void mmu_init() {
     unsigned long tmp;
     simplemm.mem_range = 0x1ffff000; // 512MB-4KB
@@ -94,7 +88,6 @@ void mmu_init() {
     print_s("dump ra address=");
     asm volatile("ld %0, 24(sp)" : "=r" (tmp));
     dump_hex(tmp);
-    dcache_call(); // without this, the stack will be correpted after satp set.
     // set satp
     asm volatile("csrw satp, %0" : : "r" ( SATP_SET_PPN(simplemm.page_table_ptr) | SATP_SET_MODE(SATP_SV39) ));
     asm volatile("csrr %0, satp" : "=r" (tmp));
